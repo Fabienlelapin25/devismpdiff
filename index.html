@@ -1,281 +1,644 @@
+```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>MP Diffusion - Générateur de Devis A4</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-<style>
+  <meta charset="UTF-8" />
+  <title>MP Diffusion - Devis</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Export PNG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --blue: #0d3b66;
+      --light: #f3f4f6;
+      --border: #d1d5db;
+    }
+    * { box-sizing: border-box; }
     body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: #e5e7eb;
-        display: flex;
-        height: 100vh;
-        overflow: hidden;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--light);
+      color: #111827;
     }
 
-    /* PANNEAU GAUCHE */
-    .left-panel {
-        width: 25%;
-        background: #ffffff;
-        padding: 20px;
-        border-right: 2px solid #d1d5db;
-        overflow-y: auto;
+    /* LAYOUT GLOBAL */
+    .app {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
     }
-    .left-panel h2 {
-        margin-top: 0;
-        color: #0d3b66;
+    .col {
+      padding: 16px;
+      overflow-y: auto;
+      background: #fff;
     }
-    .left-panel label {
-        font-weight: bold;
-        margin-top: 10px;
-        display: block;
+    .col-left { width: 30%; border-right: 1px solid var(--border); }
+    .col-center { width: 40%; background: var(--light); }
+    .col-right { width: 30%; border-left: 1px solid var(--border); }
+
+    h2, h3 { margin-top: 0; color: var(--blue); }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 10px;
     }
-    .left-panel input, .left-panel textarea, .left-panel select {
-        width: 100%;
-        padding: 8px;
-        margin-top: 5px;
-        border: 1px solid #d1d5db;
-        border-radius: 5px;
+    input, select, textarea {
+      width: 100%;
+      padding: 6px 8px;
+      margin-top: 4px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+    }
+    textarea { resize: vertical; min-height: 60px; }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #111827;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .btn-danger {
+      background: #b91c1c;
+      color: #fff;
+      font-size: 12px;
+      padding: 4px 8px;
     }
 
-    /* PREVIEW */
-    .preview-container {
-        width: 50%;
-        padding: 20px;
-        overflow-y: auto;
-        display: flex;
-        justify-content: center;
+    /* TABLE LIGNES */
+    .lines-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    .lines-table th, .lines-table td {
+      border: 1px solid var(--border);
+      padding: 4px;
+      text-align: left;
+    }
+    .lines-table input, .lines-table select {
+      width: 100%;
+      font-size: 11px;
+      padding: 3px 4px;
     }
 
-    /* PAGE A4 */
+    /* PREVIEW A4 */
+    .preview-wrapper {
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+    }
     .page {
-        width: 210mm;
-        min-height: 297mm;
-        background: white;
-        padding: 20mm;
-        margin-bottom: 20px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.2);
-        position: relative;
-        box-sizing: border-box;
+      width: 210mm;
+      min-height: 297mm;
+      background: #fff;
+      padding: 20mm;
+      box-shadow: 0 0 8px rgba(0,0,0,0.15);
+      position: relative;
     }
-
     @page {
-        size: A4;
-        margin: 0;
+      size: A4;
+      margin: 0;
     }
 
-    /* HEADER */
     .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      font-size: 12px;
     }
-    .header img {
-        height: 80px;
+    .header-left {
+      max-width: 60%;
+    }
+    .header-title {
+      text-align: right;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--blue);
+    }
+    .block {
+      margin-top: 12px;
+      font-size: 12px;
+    }
+    .block-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--blue);
+    }
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 11px;
+    }
+    .details-table th, .details-table td {
+      border: 1px solid var(--border);
+      padding: 4px;
+      text-align: left;
+    }
+    .totals {
+      margin-top: 12px;
+      font-size: 12px;
+      text-align: right;
+    }
+    .totals div { margin-top: 2px; }
+    .legal {
+      margin-top: 16px;
+      font-size: 10px;
+    }
+    .accept {
+      margin-top: 20px;
+      font-size: 11px;
     }
 
-    .title {
-        text-align: center;
-        margin-top: 20px;
-        font-size: 28px;
-        color: #0d3b66;
-        font-weight: bold;
+    /* MODAL CLIENT */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .modal {
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      width: 320px;
+      max-width: 90%;
     }
 
-    /* SECTIONS */
-    .section {
-        margin-top: 25px;
-    }
-    .section h3 {
-        margin-bottom: 5px;
-        color: #0d3b66;
-    }
+    /* COL DROITE BOUTONS */
+    .col-right h3 { margin-bottom: 8px; }
+    .col-right button { margin-top: 8px; }
 
-    /* TABLEAU */
-    table {
+    /* RESPONSIVE MOBILE */
+    @media (max-width: 900px) {
+      .app {
+        flex-direction: column;
+        height: auto;
+      }
+      .col-left, .col-center, .col-right {
         width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
-        font-size: 14px;
-    }
-    table, th, td {
-        border: 1px solid #d1d5db;
-    }
-    th, td {
-        padding: 10px;
-        text-align: left;
-    }
-
-    /* TOTALS */
-    .totaux {
-        margin-top: 20px;
-        text-align: right;
-        font-size: 18px;
-    }
-
-    /* PANNEAU DROIT */
-    .right-panel {
-        width: 25%;
-        background: #ffffff;
-        padding: 20px;
-        border-left: 2px solid #d1d5db;
-        overflow-y: auto;
-    }
-    .right-panel button {
-        width: 100%;
-        padding: 12px;
-        margin-top: 10px;
-        background: #0d3b66;
-        color: white;
+        height: auto;
         border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 15px;
+        border-bottom: 1px solid var(--border);
+      }
+      .col-center { background: var(--light); }
     }
-    .right-panel button:hover {
-        background: #0b3257;
-    }
-
-</style>
+  </style>
 </head>
-
 <body>
 
-<!-- PANEL GAUCHE -->
-<div class="left-panel">
-    <h2>Informations du devis</h2>
+<div class="app">
+  <!-- COLONNE GAUCHE : FORMULAIRE -->
+  <div class="col col-left">
+    <h2>Remplir le devis</h2>
 
-    <label>Nom du client</label>
-    <input id="client" type="text">
-
-    <label>Service</label>
-    <textarea id="service"></textarea>
-
-    <label>Quantité</label>
-    <input id="quantite" type="number" value="1">
-
-    <label>Prix unitaire (€)</label>
-    <input id="prix" type="number" value="0">
-
-    <label>TVA (20%)</label>
-    <select id="tva">
-        <option value="oui">Oui</option>
-        <option value="non">Non</option>
+    <!-- CLIENT -->
+    <h3>Client</h3>
+    <label>Client enregistré</label>
+    <select id="clientSelect">
+      <option value="">— Sélectionner un client —</option>
     </select>
+    <button class="btn-secondary" id="btnAddClient">Ajouter un client</button>
 
-    <label>Date</label>
-    <input id="date" type="date">
-</div>
-
-<!-- PREVIEW -->
-<div class="preview-container">
-    <div id="preview">
-        <div class="page">
-
-            <div class="header">
-                <img src="assets/logo.png" alt="Logo MP Diffusion">
-                <div>
-                    <strong>MP Diffusion</strong><br>
-                    Solutions & Services Professionnels
-                </div>
-            </div>
-
-            <div class="title">DEVIS</div>
-
-            <div class="section">
-                <h3>Client</h3>
-                <div id="p_client">Nom du client</div>
-            </div>
-
-            <div class="section">
-                <h3>Détails</h3>
-                <table>
-                    <tr>
-                        <th>Service</th>
-                        <th>Quantité</th>
-                        <th>Prix Unitaire</th>
-                        <th>Total</th>
-                    </tr>
-                    <tr>
-                        <td id="p_service"></td>
-                        <td id="p_quantite"></td>
-                        <td id="p_prix"></td>
-                        <td id="p_total"></td>
-                    </tr>
-                </table>
-            </div>
-
-            <div class="totaux">
-                <div id="p_ht"></div>
-                <div id="p_tva"></div>
-                <div id="p_ttc"></div>
-            </div>
-
-            <div class="section">
-                <h3>Date</h3>
-                <div id="p_date"></div>
-            </div>
-
-        </div>
+    <div id="clientPreview" style="font-size:12px; margin-top:8px; min-height:40px; border:1px solid var(--border); padding:6px; border-radius:4px;">
+      Aucun client sélectionné
     </div>
+
+    <!-- INFOS DEVIS -->
+    <h3 style="margin-top:16px;">Infos devis</h3>
+    <label>Date du devis</label>
+    <input type="date" id="devisDate" />
+
+    <label>Validité (jours)</label>
+    <input type="number" id="devisValidity" value="30" />
+
+    <label>Conditions de paiement</label>
+    <textarea id="devisConditions">30% à la commande, solde à la réception.</textarea>
+
+    <!-- LIGNES -->
+    <h3 style="margin-top:16px;">Lignes de prestations</h3>
+    <table class="lines-table" id="linesTable">
+      <thead>
+        <tr>
+          <th>Désignation</th>
+          <th>Qté</th>
+          <th>Unité</th>
+          <th>PU HT</th>
+          <th>TVA</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="linesBody">
+      </tbody>
+    </table>
+    <button class="btn-primary" id="btnAddLine">Ajouter une ligne</button>
+  </div>
+
+  <!-- COLONNE CENTRE : PREVIEW A4 -->
+  <div class="col col-center">
+    <h2 style="margin:0 0 8px 0;">Prévisualisation</h2>
+    <div class="preview-wrapper">
+      <div class="page" id="page">
+        <!-- ENTÊTE ENTREPRISE + TITRE -->
+        <div class="header">
+          <div class="header-left">
+            <strong>MP Diffusion</strong><br />
+            Entreprise Individuelle<br />
+            Adresse : 12 Rue Exemple, 33000 Bordeaux<br />
+            SIRET : 1234 1234 1234 12<br />
+            RCS : Bordeaux 123 456 789<br />
+            TVA intracom : FR123456789<br />
+            Tél : 06 00 00 00 00<br />
+            Email : contact@mpdiffusion.fr
+          </div>
+          <div class="header-right">
+            <div class="header-title" id="devisTitle">DEVIS</div>
+          </div>
+        </div>
+
+        <!-- CLIENT -->
+        <div class="block">
+          <div class="block-title">Client</div>
+          <div id="previewClient">
+            Aucun client sélectionné
+          </div>
+        </div>
+
+        <!-- INFOS DEVIS -->
+        <div class="block">
+          <div class="block-title">Informations du devis</div>
+          <div id="previewInfos">
+            Devis n° : —<br />
+            Date : —<br />
+            Validité : —
+          </div>
+        </div>
+
+        <!-- TABLEAU PRESTATIONS -->
+        <div class="block">
+          <div class="block-title">Détail des prestations</div>
+          <table class="details-table" id="previewLinesTable">
+            <thead>
+              <tr>
+                <th>Désignation</th>
+                <th>Qté</th>
+                <th>Unité</th>
+                <th>PU HT</th>
+                <th>TVA</th>
+                <th>Total HT</th>
+              </tr>
+            </thead>
+            <tbody id="previewLinesBody">
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TOTAUX -->
+        <div class="totals" id="previewTotals">
+          Total HT : 0 €<br />
+          TVA : 0 €<br />
+          Total TTC : 0 €
+        </div>
+
+        <!-- MENTIONS LEGALES -->
+        <div class="legal" id="previewLegal">
+          Conditions de paiement : 30% à la commande, solde à la réception.<br />
+          Pénalités de retard : taux légal en vigueur.<br />
+          Indemnité forfaitaire pour frais de recouvrement : 40 €.
+        </div>
+
+        <!-- ACCEPTATION -->
+        <div class="accept">
+          Bon pour accord, signature du client :<br /><br />
+          Nom : ___________________________<br />
+          Date : ____ / ____ / ______<br />
+          Signature :
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLONNE DROITE : BOUTONS -->
+  <div class="col col-right">
+    <h2>Actions</h2>
+    <h3>Devis</h3>
+    <button class="btn-primary" id="btnNewDevis">Nouveau devis (numéro)</button>
+    <button class="btn-secondary" id="btnReset">Réinitialiser le formulaire</button>
+
+    <h3 style="margin-top:16px;">Export / Impression</h3>
+    <button class="btn-primary" id="btnPrint">Imprimer / PDF</button>
+    <button class="btn-secondary" id="btnExportPNG">Exporter en PNG</button>
+  </div>
 </div>
 
-<!-- PANEL DROIT -->
-<div class="right-panel">
-    <button id="reset">Réinitialiser</button>
-    <button id="exportPNG">Exporter en PNG</button>
+<!-- MODAL CLIENT -->
+<div class="modal-backdrop" id="clientModal">
+  <div class="modal">
+    <h3>Nouveau client</h3>
+    <label>Nom / Raison sociale</label>
+    <input type="text" id="c_nom" />
+
+    <label>Adresse</label>
+    <textarea id="c_adresse"></textarea>
+
+    <label>SIRET (optionnel)</label>
+    <input type="text" id="c_siret" />
+
+    <label>Contact (tél / email)</label>
+    <input type="text" id="c_contact" />
+
+    <button class="btn-primary" id="btnSaveClient">Enregistrer</button>
+    <button class="btn-secondary" id="btnCloseClient">Annuler</button>
+  </div>
 </div>
 
 <script>
-function updatePreview() {
-    const client = document.getElementById("client").value;
-    const service = document.getElementById("service").value;
-    const quantite = Number(document.getElementById("quantite").value);
-    const prix = Number(document.getElementById("prix").value);
-    const tvaActive = document.getElementById("tva").value === "oui";
-    const date = document.getElementById("date").value;
+  // ---------- STOCKAGE ----------
+  let clients = JSON.parse(localStorage.getItem("mpd_clients") || "[]");
+  let lastDevisNumber = Number(localStorage.getItem("mpd_lastDevisNumber") || "0");
+  let currentDevisNumber = null;
 
-    const totalHT = quantite * prix;
-    const montantTVA = tvaActive ? totalHT * 0.20 : 0;
-    const totalTTC = totalHT + montantTVA;
+  // ---------- CLIENTS ----------
+  const clientSelect = document.getElementById("clientSelect");
+  const clientPreview = document.getElementById("clientPreview");
+  const previewClient = document.getElementById("previewClient");
 
-    document.getElementById("p_client").innerText = client || "Nom du client";
-    document.getElementById("p_service").innerText = service;
-    document.getElementById("p_quantite").innerText = quantite;
-    document.getElementById("p_prix").innerText = prix + " €";
-    document.getElementById("p_total").innerText = totalHT + " €";
-
-    document.getElementById("p_ht").innerText = "Total HT : " + totalHT + " €";
-    document.getElementById("p_tva").innerText = "TVA (20%) : " + montantTVA + " €";
-    document.getElementById("p_ttc").innerText = "Total TTC : " + totalTTC + " €";
-
-    document.getElementById("p_date").innerText = date;
-}
-
-document.querySelectorAll("input, textarea, select").forEach(el => {
-    el.addEventListener("input", updatePreview);
-});
-
-document.getElementById("reset").onclick = () => {
-    document.querySelectorAll("input, textarea").forEach(el => el.value = "");
-    document.getElementById("quantite").value = 1;
-    document.getElementById("prix").value = 0;
-    updatePreview();
-};
-
-document.getElementById("exportPNG").onclick = () => {
-    html2canvas(document.querySelector(".page")).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "devis.png";
-        link.href = canvas.toDataURL();
-        link.click();
+  function refreshClientSelect() {
+    clientSelect.innerHTML = '<option value="">— Sélectionner un client —</option>';
+    clients.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = c.nom;
+      clientSelect.appendChild(opt);
     });
-};
+  }
 
-updatePreview();
+  function updateClientPreview() {
+    const id = clientSelect.value;
+    if (!id) {
+      clientPreview.textContent = "Aucun client sélectionné";
+      previewClient.textContent = "Aucun client sélectionné";
+      return;
+    }
+    const c = clients.find(x => x.id == id);
+    if (!c) return;
+    const txt = `${c.nom}\n${c.adresse}\n${c.siret ? "SIRET : " + c.siret + "\n" : ""}${c.contact ? "Contact : " + c.contact : ""}`;
+    clientPreview.textContent = txt;
+    previewClient.innerHTML = txt.replace(/\n/g, "<br />");
+  }
+
+  clientSelect.addEventListener("change", () => {
+    updateClientPreview();
+  });
+
+  // Modal client
+  const clientModal = document.getElementById("clientModal");
+  document.getElementById("btnAddClient").onclick = () => {
+    document.getElementById("c_nom").value = "";
+    document.getElementById("c_adresse").value = "";
+    document.getElementById("c_siret").value = "";
+    document.getElementById("c_contact").value = "";
+    clientModal.style.display = "flex";
+  };
+  document.getElementById("btnCloseClient").onclick = () => {
+    clientModal.style.display = "none";
+  };
+  document.getElementById("btnSaveClient").onclick = () => {
+    const nom = document.getElementById("c_nom").value.trim();
+    const adresse = document.getElementById("c_adresse").value.trim();
+    const siret = document.getElementById("c_siret").value.trim();
+    const contact = document.getElementById("c_contact").value.trim();
+    if (!nom || !adresse) {
+      alert("Nom et adresse sont obligatoires.");
+      return;
+    }
+    const newClient = {
+      id: Date.now(),
+      nom, adresse, siret, contact
+    };
+    clients.push(newClient);
+    localStorage.setItem("mpd_clients", JSON.stringify(clients));
+    refreshClientSelect();
+    clientSelect.value = newClient.id;
+    updateClientPreview();
+    clientModal.style.display = "none";
+  };
+
+  // ---------- LIGNES ----------
+  const linesBody = document.getElementById("linesBody");
+  const previewLinesBody = document.getElementById("previewLinesBody");
+
+  function addLine(initial = {}) {
+    const tr = document.createElement("tr");
+
+    const tdDesc = document.createElement("td");
+    const inpDesc = document.createElement("input");
+    inpDesc.type = "text";
+    inpDesc.value = initial.desc || "";
+    tdDesc.appendChild(inpDesc);
+
+    const tdQty = document.createElement("td");
+    const inpQty = document.createElement("input");
+    inpQty.type = "number";
+    inpQty.min = "0";
+    inpQty.step = "0.01";
+    inpQty.value = initial.qty || "1";
+    tdQty.appendChild(inpQty);
+
+    const tdUnit = document.createElement("td");
+    const inpUnit = document.createElement("input");
+    inpUnit.type = "text";
+    inpUnit.value = initial.unit || "unité";
+    tdUnit.appendChild(inpUnit);
+
+    const tdPU = document.createElement("td");
+    const inpPU = document.createElement("input");
+    inpPU.type = "number";
+    inpPU.min = "0";
+    inpPU.step = "0.01";
+    inpPU.value = initial.pu || "0";
+    tdPU.appendChild(inpPU);
+
+    const tdTVA = document.createElement("td");
+    const selTVA = document.createElement("select");
+    ["20","10","5.5","0"].forEach(v => {
+      const o = document.createElement("option");
+      o.value = v;
+      o.textContent = v + " %";
+      selTVA.appendChild(o);
+    });
+    selTVA.value = initial.tva || "20";
+    tdTVA.appendChild(selTVA);
+
+    const tdDel = document.createElement("td");
+    const btnDel = document.createElement("button");
+    btnDel.textContent = "X";
+    btnDel.className = "btn-danger";
+    btnDel.onclick = () => {
+      tr.remove();
+      updatePreview();
+    };
+    tdDel.appendChild(btnDel);
+
+    [inpDesc, inpQty, inpUnit, inpPU, selTVA].forEach(el => {
+      el.addEventListener("input", updatePreview);
+    });
+
+    tr.appendChild(tdDesc);
+    tr.appendChild(tdQty);
+    tr.appendChild(tdUnit);
+    tr.appendChild(tdPU);
+    tr.appendChild(tdTVA);
+    tr.appendChild(tdDel);
+
+    linesBody.appendChild(tr);
+    updatePreview();
+  }
+
+  document.getElementById("btnAddLine").onclick = () => addLine();
+
+  // ---------- NUMEROTATION DEVIS ----------
+  function newDevisNumber() {
+    const year = new Date().getFullYear();
+    lastDevisNumber++;
+    localStorage.setItem("mpd_lastDevisNumber", String(lastDevisNumber));
+    currentDevisNumber = `${year}-${String(lastDevisNumber).padStart(3,"0")}`;
+    document.getElementById("devisTitle").textContent = "DEVIS " + currentDevisNumber;
+    updatePreview();
+  }
+
+  document.getElementById("btnNewDevis").onclick = () => {
+    newDevisNumber();
+  };
+
+  // ---------- PREVIEW ----------
+  const devisDate = document.getElementById("devisDate");
+  const devisValidity = document.getElementById("devisValidity");
+  const devisConditions = document.getElementById("devisConditions");
+  const previewInfos = document.getElementById("previewInfos");
+  const previewTotals = document.getElementById("previewTotals");
+  const previewLegal = document.getElementById("previewLegal");
+
+  function updatePreview() {
+    // Infos devis
+    const d = devisDate.value;
+    const v = devisValidity.value || "0";
+    const num = currentDevisNumber || "—";
+    previewInfos.innerHTML =
+      `Devis n° : ${num}<br />` +
+      `Date : ${d || "—"}<br />` +
+      `Validité : ${v} jours`;
+
+    // Conditions
+    previewLegal.innerHTML =
+      `${(devisConditions.value || "Conditions de paiement non précisées.")}<br />` +
+      `Pénalités de retard : taux légal en vigueur.<br />` +
+      `Indemnité forfaitaire pour frais de recouvrement : 40 €.`;
+
+    // Lignes
+    previewLinesBody.innerHTML = "";
+    let totalHT = 0;
+    let totalTVA = 0;
+
+    Array.from(linesBody.children).forEach(tr => {
+      const [descEl, qtyEl, unitEl, puEl, tvaEl] = tr.querySelectorAll("input, select");
+      const desc = descEl.value.trim();
+      const qty = parseFloat(qtyEl.value || "0");
+      const unit = unitEl.value.trim();
+      const pu = parseFloat(puEl.value || "0");
+      const tvaRate = parseFloat(tvaEl.value || "0");
+
+      const lineHT = qty * pu;
+      const lineTVA = lineHT * (tvaRate / 100);
+
+      totalHT += lineHT;
+      totalTVA += lineTVA;
+
+      const trPrev = document.createElement("tr");
+      trPrev.innerHTML = `
+        <td>${desc || "-"}</td>
+        <td>${isNaN(qty) ? "-" : qty}</td>
+        <td>${unit || "-"}</td>
+        <td>${isNaN(pu) ? "-" : pu.toFixed(2)} €</td>
+        <td>${tvaRate.toFixed(1)} %</td>
+        <td>${isNaN(lineHT) ? "-" : lineHT.toFixed(2)} €</td>
+      `;
+      previewLinesBody.appendChild(trPrev);
+    });
+
+    const totalTTC = totalHT + totalTVA;
+    previewTotals.innerHTML =
+      `Total HT : ${totalHT.toFixed(2)} €<br />` +
+      `TVA : ${totalTVA.toFixed(2)} €<br />` +
+      `Total TTC : ${totalTTC.toFixed(2)} €`;
+  }
+
+  [devisDate, devisValidity, devisConditions].forEach(el => {
+    el.addEventListener("input", updatePreview);
+  });
+
+  // ---------- RESET ----------
+  document.getElementById("btnReset").onclick = () => {
+    clientSelect.value = "";
+    updateClientPreview();
+    devisDate.value = "";
+    devisValidity.value = "30";
+    devisConditions.value = "30% à la commande, solde à la réception.";
+    linesBody.innerHTML = "";
+    addLine();
+    currentDevisNumber = null;
+    document.getElementById("devisTitle").textContent = "DEVIS";
+    updatePreview();
+  };
+
+  // ---------- PRINT / PDF ----------
+  document.getElementById("btnPrint").onclick = () => {
+    window.print(); // l’utilisateur choisit "Enregistrer en PDF" ou imprimante
+  };
+
+  // ---------- EXPORT PNG ----------
+  document.getElementById("btnExportPNG").onclick = () => {
+    const page = document.getElementById("page");
+    html2canvas(page, { scale: 2 }).then(canvas => {
+      const link = document.createElement("a");
+      link.download = (currentDevisNumber || "devis") + ".png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    });
+  };
+
+  // ---------- INIT ----------
+  (function init() {
+    refreshClientSelect();
+    addLine();
+    const today = new Date().toISOString().slice(0,10);
+    devisDate.value = today;
+    updatePreview();
+  })();
 </script>
 
 </body>
 </html>
+```
